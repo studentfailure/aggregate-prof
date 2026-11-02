@@ -368,6 +368,17 @@ impl ThreadAggregate
     CallSiteAggregateStatSnapshot { count, total_time, max_time, bins }
   }
 
+  /// Returns the max time recorded since the last call, and resets it.
+  pub fn take_max_time(&self, call_site_id: u32) -> u64
+  {
+    let index = call_site_id as usize;
+    self.max_time.bucket(index).map_or(0, |bucket|
+    {
+      let slot = AggregateStatBucketContainer::<BUCKETS>::slot_in_bucket(index, bucket.len());
+      bucket.0[slot].swap(0, Ordering::AcqRel)
+    })
+  }
+
   /// Returns the configuration used for this thread aggregate.
   pub const fn config(&self) -> ThreadAggregateConfig
   {
@@ -566,6 +577,40 @@ pub fn build_report() -> Report
           snapshot.count,
           snapshot.total_time,
           snapshot.max_time,
+          snapshot.bins
+        ));
+      }
+    });
+    if !thread_reports.is_empty()
+    {
+      call_site_reports.push(CallSiteReport::new(
+        call_site.name(),
+        call_site.file(),
+        call_site.line(),
+        thread_reports,
+      ));
+    }
+  });
+  Report::new(call_site_reports)
+}
+
+/// Same as `build_report`, but resets each call site's max time, so `max_time` covers only the time since the last call.
+pub fn build_report_taking_max() -> Report
+{
+  let mut call_site_reports = Vec::new();
+  for_each_call_site(|call_site|
+  {
+    let mut thread_reports = Vec::new();
+    for_each_thread_aggregate(|thread_aggregate|
+    {
+      let snapshot = thread_aggregate.snapshot(call_site.id());
+      if snapshot.count > 0
+      {
+        thread_reports.push(ThreadReport::new(
+          &thread_aggregate.thread_name,
+          snapshot.count,
+          snapshot.total_time,
+          thread_aggregate.take_max_time(call_site.id()),
           snapshot.bins
         ));
       }
