@@ -25,6 +25,20 @@ pub mod macros
     };
   }
 
+  /// Defines an explicit profiling scope with the given name. 
+  /// The scope will automatically end when the current block is exited, and the time spent in the scope will be recorded for the current thread.
+  #[macro_export]
+  macro_rules! explicit_scope 
+  {
+    ($name: literal) => 
+    {
+      {
+        static SITE: $crate::CallSite = $crate::CallSite::new($name, file!(), line!());
+        $crate::start(&SITE)
+      };
+    };
+  }
+
   /// Defines a profiling scope for the current function. 
   /// The scope will automatically end when the current block is exited, and the time spent in the scope will be recorded for the current thread.
   #[cfg(feature = "nightly")]
