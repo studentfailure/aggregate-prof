@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "nightly", feature(const_type_name))]
+
 use aggregate_prof::{build_report, scope};
 use std::thread::{self, Builder};
 
@@ -15,6 +17,14 @@ fn thread_counts(site_name: &str) -> Vec<(&'static str, u64)>
 fn run_named(name: &str, f: fn())
 {
   Builder::new().name(name.to_string()).spawn(f).unwrap().join().unwrap();
+}
+
+#[cfg(feature = "nightly")]
+#[test]
+fn derived_scope_name_from_fn()
+{
+  let fn_name = aggregate_prof::_psuedo_fn_name!();
+  assert!(fn_name.ends_with("derived_scope_name_from_fn"));
 }
 
 #[test]

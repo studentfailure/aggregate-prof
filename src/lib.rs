@@ -27,6 +27,7 @@ pub mod macros
 
   /// Defines a profiling scope for the current function. 
   /// The scope will automatically end when the current block is exited, and the time spent in the scope will be recorded for the current thread.
+  #[cfg(feature = "nightly")]
   #[macro_export]
   macro_rules! function_scope 
   {
@@ -40,17 +41,21 @@ pub mod macros
     };
   }
 
+  #[cfg(feature = "nightly")]
   #[macro_export]
   macro_rules! _psuedo_fn_name 
   {
-    () => {
+    () => {{
       fn f() {}
-      fn type_name_of<T>(_: T) -> &'static str {
-          std::any::type_name::<T>()
+      const fn name_of<T>(_: &T) -> &'static str { core::any::type_name::<T>() }
+      const _NAME_RAW: &str = name_of(&f);
+      const fn strip(s: &str) -> &str {
+        let b = s.as_bytes();
+        let (head, _) = b.split_at(b.len() - 3);
+        unsafe { core::str::from_utf8_unchecked(head) }
       }
-      let name = type_name_of(f);
-      &name[..name.len() - 3]
-    };
+      strip(_NAME_RAW)
+    }};
   }
 }
 
