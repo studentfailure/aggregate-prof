@@ -49,7 +49,8 @@ pub mod macros
     {
       let _guard =
       {
-        static SITE: $crate::CallSite = $crate::CallSite::new($crate::_psuedo_fn_name!(), file!(), line!());
+        static _SITE_FUNC_NAME: &str = $crate::_psuedo_fn_name!();
+        static SITE: $crate::CallSite = $crate::CallSite::new(_FUNC_NAME, file!(), line!());
         $crate::start(&SITE)
       };
     };
@@ -60,15 +61,10 @@ pub mod macros
   macro_rules! _psuedo_fn_name 
   {
     () => {{
-      fn f() {}
+      fn _SITE() {}
       const fn name_of<T>(_: &T) -> &'static str { core::any::type_name::<T>() }
-      const _NAME_RAW: &str = name_of(&f);
-      const fn strip(s: &str) -> &str {
-        let b = s.as_bytes();
-        let (head, _) = b.split_at(b.len() - 3);
-        unsafe { core::str::from_utf8_unchecked(head) }
-      }
-      strip(_NAME_RAW)
+      const _NAME_RAW: &'static str = name_of(&_SITE);
+      _NAME_RAW
     }};
   }
 }

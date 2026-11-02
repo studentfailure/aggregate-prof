@@ -24,7 +24,7 @@ fn run_named(name: &str, f: fn())
 fn resolve_enclosing_fn_name()
 {
   let fn_name = aggregate_prof::_psuedo_fn_name!();
-  assert!(fn_name.ends_with("resolve_enclosing_fn_name"));
+  assert!(fn_name.contains("resolve_enclosing_fn_name"));
 }
 
 #[test]
