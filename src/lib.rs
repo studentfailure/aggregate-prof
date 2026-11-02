@@ -7,18 +7,51 @@ use arch::clock as clock;
 
 use std::{sync::{OnceLock, atomic::{AtomicBool, AtomicPtr, AtomicU32, AtomicU64, Ordering}}};
 
-/// Defines a profiling scope with the given name. The scope will automatically end when the current block is exited, and the time spent in the scope will be recorded for the current thread.
-#[macro_export]
-macro_rules! scope 
+#[macro_use]
+pub mod macros
 {
-  ($name: literal) => 
+  /// Defines a profiling scope with the given name. 
+  /// The scope will automatically end when the current block is exited, and the time spent in the scope will be recorded for the current thread.
+  #[macro_export]
+  macro_rules! scope 
   {
-    let _guard =
+    ($name: literal) => 
     {
-      static SITE: $crate::CallSite = $crate::CallSite::new($name, file!(), line!());
-      $crate::start(&SITE)
+      let _guard =
+      {
+        static SITE: $crate::CallSite = $crate::CallSite::new($name, file!(), line!());
+        $crate::start(&SITE)
+      };
     };
-  };
+  }
+
+  /// Defines a profiling scope for the current function. 
+  /// The scope will automatically end when the current block is exited, and the time spent in the scope will be recorded for the current thread.
+  #[macro_export]
+  macro_rules! function_scope 
+  {
+    () => 
+    {
+      let _guard =
+      {
+        static SITE: $crate::CallSite = $crate::CallSite::new($crate::_psuedo_fn_name!(), file!(), line!());
+        $crate::start(&SITE)
+      };
+    };
+  }
+
+  #[macro_export]
+  macro_rules! _psuedo_fn_name 
+  {
+    () => {
+      fn f() {}
+      fn type_name_of<T>(_: T) -> &'static str {
+          std::any::type_name::<T>()
+      }
+      let name = type_name_of(f);
+      &name[..name.len() - 3]
+    };
+  }
 }
 
 #[inline(always)]
