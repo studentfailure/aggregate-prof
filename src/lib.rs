@@ -50,8 +50,8 @@ pub mod macros
       let _guard =
       {
         static _SITE_FUNC_NAME: &str = $crate::_psuedo_fn_name!();
-        static SITE: $crate::CallSite = $crate::CallSite::new(_FUNC_NAME, file!(), line!());
-        $crate::start(&SITE)
+        static _SITE: $crate::CallSite = $crate::CallSite::new(_SITE_FUNC_NAME, file!(), line!());
+        $crate::start(&_SITE)
       };
     };
   }
